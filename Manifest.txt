@@ -1,11 +1,7 @@
 History.txt
 Manifest.txt
-PostInstall.txt
 README.rdoc
 Rakefile
 lib/authority-labs-client.rb
-script/console
-script/destroy
-script/generate
 test/test_authority-labs-client.rb
 test/test_helper.rb
