@@ -4,12 +4,13 @@ require File.dirname(__FILE__) + '/lib/authority-labs-client'
 
 # Generate all the Rake tasks
 # Run 'rake -T' to see list of generated tasks (from gem root directory)
-$hoe = Hoe.new('authority-labs-client', AuthorityLabsClient::VERSION) do |p|
+$hoe = Hoe.new('authority-labs-client', AuthorityLabs::VERSION) do |p|
   p.developer('Cramer Development, Inc.', 'support@cramerdev.com')
   p.changes              = p.paragraphs_of("History.txt", 0..1).join("\n\n")
   p.rubyforge_name       = p.name
   p.extra_deps         = [
     ['rest-client','>= 1.0.3'],
+    ['activesupport', '>= 2.3.2']
   ]
   p.extra_dev_deps = [
     ['newgem', ">= #{::Newgem::VERSION}"]
