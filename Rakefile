@@ -9,8 +9,8 @@ $hoe = Hoe.new('authority-labs-client', AuthorityLabs::VERSION) do |p|
   p.changes              = p.paragraphs_of("History.txt", 0..1).join("\n\n")
   p.rubyforge_name       = p.name
   p.extra_deps         = [
-    ['rest-client','>= 1.0.3'],
-    ['activesupport', '>= 2.3.2']
+    ['activesupport', '>= 2.3.2'],
+    ['activeresource', '>= 2.3.2']
   ]
   p.extra_dev_deps = [
     ['newgem', ">= #{::Newgem::VERSION}"]

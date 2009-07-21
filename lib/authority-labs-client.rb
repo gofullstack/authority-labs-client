@@ -2,20 +2,27 @@ $:.unshift(File.dirname(__FILE__)) unless
   $:.include?(File.dirname(__FILE__)) || $:.include?(File.expand_path(File.dirname(__FILE__)))
 
 require "rubygems"
-require "restclient"
-require "activesupport"
+require "active_support"
+require "active_resource"
 
 module AuthorityLabs
   VERSION = '0.0.1'
 
-  # Error classes
   class ArgumentError < ArgumentError; end
-  class ResponseError < StandardError; end
-  class UnauthorizedError < RestClient::Unauthorized; end
+
+  class Resource < ActiveResource::Base
+    self.timeout = 5
+  end
+
+  class Keyword < Resource
+    self.element_name = "watched_keyword"
+  end
+
+  class Domain < Resource
+    self.element_name = "watched_domain"
+  end
 
   class Client
-    EXPECTED_CONTENT_TYPE = "application/xml; charset=utf-8"
-
     def initialize(options = {})
       options.symbolize_keys!
 
@@ -33,34 +40,25 @@ module AuthorityLabs
       @api_key = options[:api_key]
       @password = options[:password]
       @subdomain = options[:subdomain]
-      
     end
     attr_accessor :api_key, :password, :subdomain
 
-    def base_url
-      "https://#{@api_key}:#{@password}@#{@subdomain}.authoritylabs.com/"
+    def site
+      "http://#{@api_key}:#{@password}@#{@subdomain}.authoritylabs.com/"
     end
 
-    # Send requests through RestClient
-    def method_missing(method_name, *args)
-      if [:get, :post, :put, :delete].include?(method_name)
-        args[0] = base_url + args[0].to_s # Add the base url to the url argument
-        begin
-          response = RestClient.send(method_name, *args)
-          if response.headers[:content_type] != EXPECTED_CONTENT_TYPE 
-            raise ResponseError.new
-              "Did not get an XML response. Check your settings"
-          end
-        rescue RestClient::Unauthorized => e
-          raise UnauthorizedError.new(e)
-        end
-      end
+    def domain
+      Domain.site = site
+      Domain
     end
-  end
+    alias_method :domains, :domain
 
-  class Domain
-  end
-
-  class Keyword
+    def keyword_for(domain = nil)
+      Keyword.site = site + "watched_domains/#{domain.id}/"
+      Keyword
+    end
+    alias_method :keywords_for, :keyword_for
+    alias_method :keyword, :keyword_for
+    alias_method :keywords, :keyword_for
   end
 end
