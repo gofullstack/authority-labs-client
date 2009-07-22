@@ -39,8 +39,18 @@ module AuthorityLabs
   class Keyword < Resource
     self.element_name = "watched_keyword"
 
+    # Domain for instance
+    def domain
+      Domain.find(@prefix_options[:watched_domain_id])
+    end
+
+    # Domain for class
     def self.domain=(d = nil)
       @@domain = d
+    end
+
+    def self.domain
+      @@domain
     end
 
     # Append the domain keyword if there is one
@@ -75,7 +85,7 @@ module AuthorityLabs
         self.send("#{k}=", v)
       end
       # Set the site for the ActiveResource objects
-      Resource.site = Domain.site = site
+      Resource.site = site
       # Special for keywords
       Keyword.site = "#{site}watched_domains/:watched_domain_id"
       self
