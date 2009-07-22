@@ -17,6 +17,19 @@ module AuthorityLabs
 
   class Resource < ActiveResource::Base
     self.timeout = 5
+
+    # Shortcuts
+    def self.first(*args)
+      self.find(:first, *args)
+    end
+
+    def self.last(*args)
+      self.find(:last, *args)
+    end
+
+    def self.all(*args)
+      self.find(:all, *args)
+    end
   end
 
   class Domain < Resource
@@ -25,6 +38,32 @@ module AuthorityLabs
 
   class Keyword < Resource
     self.element_name = "watched_keyword"
+
+    def self.domain=(d = nil)
+      @@domain = d
+    end
+
+    # Append the domain keyword if there is one
+    def load(attributes)
+      attributes.merge!(:watched_domain_id => @@domain.id) if has_domain?
+      super(attributes)
+    end
+
+    def self.find(*arguments)
+      scope   = arguments.slice!(0)
+      options = arguments.slice!(0) || {}
+
+      if has_domain?
+        options.merge!(:params => { :watched_domain_id => @@domain.id })
+      end
+
+      super(scope, options)
+    end
+
+    private 
+      def self.has_domain?
+        defined?(@@domain) && @@domain.respond_to?(:id)
+      end
   end
 
   class << self
