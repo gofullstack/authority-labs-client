@@ -5,6 +5,11 @@ require "rubygems"
 require "active_support"
 require "active_resource"
 
+# Mock expected AdWords object
+module AdWords;module V13;module KeywordToolService 
+  class SiteKeyword < Hash;end
+end;end;end
+
 module AuthorityLabs
   VERSION = '0.0.1'
 
@@ -14,51 +19,40 @@ module AuthorityLabs
     self.timeout = 5
   end
 
-  class Keyword < Resource
-    self.element_name = "watched_keyword"
-  end
-
   class Domain < Resource
     self.element_name = "watched_domain"
   end
 
-  class Client
-    def initialize(options = {})
-      options.symbolize_keys!
+  class Keyword < Resource
+    self.element_name = "watched_keyword"
+  end
 
-      # Throw error if arguments are incorrect
-      valid_args = options.keys.include?(:api_key) &&
-        options.keys.include?(:password)  &&
-        options.keys.include?(:subdomain) &&
-        options.values.compact.length >= 3
-
-      unless valid_args
-        raise ArgumentError.new 
-          "The API key, password, and subdomain must be specified" 
-      end
-
-      @api_key = options[:api_key]
-      @password = options[:password]
-      @subdomain = options[:subdomain]
-    end
+  class << self
     attr_accessor :api_key, :password, :subdomain
 
+    # Set the options from an object
+    def setup(options = {})
+      options.symbolize_keys.each_pair do |k, v|
+        self.send("#{k}=", v)
+      end
+      # Set the site for the ActiveResource objects
+      Resource.site = Domain.site = site
+      # Special for keywords
+      Keyword.site = "#{site}watched_domains/:watched_domain_id"
+      self
+    end
+
+    # Get the url used by the objects
     def site
-      "http://#{@api_key}:#{@password}@#{@subdomain}.authoritylabs.com/"
+      if [@api_key, @password, @subdomain].any? do |v| 
+        v.nil? || !defined?(v)
+      end
+        raise AuthorityLabs::ArgumentError.new(
+          "The API key, password, and subdomain must be defined."
+        )
+      else
+        "http://#{@api_key}:#{@password}@#{@subdomain}.authoritylabs.com/"
+      end
     end
-
-    def domain
-      Domain.site = site
-      Domain
-    end
-    alias_method :domains, :domain
-
-    def keyword_for(domain = nil)
-      Keyword.site = site + "watched_domains/#{domain.id}/"
-      Keyword
-    end
-    alias_method :keywords_for, :keyword_for
-    alias_method :keyword, :keyword_for
-    alias_method :keywords, :keyword_for
   end
 end
