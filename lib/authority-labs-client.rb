@@ -18,17 +18,13 @@ module AuthorityLabs
   class Resource < ActiveResource::Base
     self.timeout = 5
 
-    # Shortcuts
-    def self.first(*args)
-      self.find(:first, *args)
-    end
-
-    def self.last(*args)
-      self.find(:last, *args)
-    end
-
-    def self.all(*args)
-      self.find(:all, *args)
+    # If the resource can't be found, return nil instead of an error
+    def self.find(*arguments)
+      begin
+        super(*arguments)
+      rescue ActiveResource::ResourceNotFound => e
+        nil
+      end
     end
   end
 
