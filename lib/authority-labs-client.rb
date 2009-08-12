@@ -28,47 +28,40 @@ module AuthorityLabs
     end
   end
 
-  class Domain < Resource
-    self.element_name = "watched_domain"
-  end
-
   class Keyword < Resource
     self.element_name = "watched_keyword"
 
-    # Domain for instance
-    def domain
-      Domain.find(@prefix_options[:watched_domain_id])
-    end
-
-    # Domain for class
-    def self.domain=(d = nil)
-      @@domain = d
-    end
-
-    def self.domain
-      @@domain
-    end
-
-    # Append the domain keyword if there is one
+    # The keywords can return multiple records on a single find, which will
+    # make AR freak, so we have to patch that here
     def load(attributes)
-      attributes.merge!(:watched_domain_id => @@domain.id) if has_domain?
+      if attributes.is_a?(Array) 
+        records = attributes.clone
+        attributes = {}
+        records.each {|rec| attributes.merge!(rec) } if records.length >= 1
+      end
       super(attributes)
     end
+  end
 
-    def self.find(*arguments)
-      scope   = arguments.slice!(0)
-      options = arguments.slice!(0) || {}
+  class Domain < Resource
+    self.element_name = "watched_domain"
 
-      if has_domain?
-        options.merge!(:params => { :watched_domain_id => @@domain.id })
-      end
-
-      super(scope, options)
+    # Array of all keywords for domain
+    def keywords
+      keyword_class.find(:all, :params => { :watched_domain_id => self.id })
     end
 
-    private 
-      def self.has_domain?
-        defined?(@@domain) && @@domain.respond_to?(:id)
+    # Add a keyword
+    def create_keyword(keywords = "")
+      keyword_class.create(:keyword_name => keywords, 
+                           :watched_domain_id => self.id)
+    end
+
+    # TODO: Find keyword by name or id
+
+    private
+      def keyword_class
+        AuthorityLabs::Keyword
       end
   end
 
