@@ -26,18 +26,36 @@ module AuthorityLabs
         nil
       end
     end
+    
+    # This here is a hack to remove the nested root node from the request. Sets
+    # the root node to nil and removes the <> and </>
+    def encode(options={})
+      self.class.format.encode(attributes, {:root => nil}.merge(options)).gsub(
+        /<\/?>/, "")
+    end
   end
 
   class Keyword < Resource
     self.element_name = "watched_keyword"
 
     # The keywords can return multiple records on a single find, which will
-    # make AR freak, so we have to patch that here
+    # make AR freak, so we have to patch that here.
+    #
+    # This method also sets the id of the record to be the watched keyword
+    # id for which we can do a find and reference later
     def load(attributes)
-      if attributes.is_a?(Array) 
+      if attributes.is_a?(Array)
         records = attributes.clone
         attributes = {}
-        records.each {|rec| attributes.merge!(rec) } if records.length >= 1
+        id = nil
+        if records.length >= 1
+          records.each_with_index do |rec, i|
+            # The "actual" id is the 1st
+            id = rec["id"] if i == 0 && rec["id"].to_i > 0
+            attributes.merge!(rec)
+          end
+          attributes["id"] = id || attributes["id"]
+        end
       end
       super(attributes)
     end
@@ -48,7 +66,8 @@ module AuthorityLabs
 
     # Array of all keywords for domain
     def keywords
-      keyword_class.find(:all, :params => { :watched_domain_id => self.id })
+      @keywords ||= keyword_class.find(:all, :params => { 
+        :watched_domain_id => self.id })
     end
 
     # Add a keyword
@@ -57,7 +76,10 @@ module AuthorityLabs
                            :watched_domain_id => self.id)
     end
 
-    # TODO: Find keyword by name or id
+    # Find a keyword by id
+    def find_keyword(keyword_id = 0)
+      keyword_class.find(keyword_id, :params => {:watched_domain_id => self.id})
+    end
 
     private
       def keyword_class
