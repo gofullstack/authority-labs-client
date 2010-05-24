@@ -59,6 +59,10 @@ module AuthorityLabs
       end
       super(attributes)
     end
+    
+    def self.find_with_domain(id, domain_id)
+      self.find(id, :params => {:watched_domain_id => domain_id})
+    end
   end
 
   class Domain < Resource
@@ -78,7 +82,7 @@ module AuthorityLabs
 
     # Find a keyword by id
     def find_keyword(keyword_id = 0)
-      keyword_class.find(keyword_id, :params => {:watched_domain_id => self.id})
+      keyword_class.find_with_domain(keyword_id, self.id)
     end
 
     private
