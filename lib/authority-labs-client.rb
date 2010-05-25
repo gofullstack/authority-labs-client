@@ -6,7 +6,7 @@ require "active_support"
 require "active_resource"
 
 # Mock expected AdWords object
-module AdWords;module V13;module KeywordToolService 
+module AdWords;module V13;module KeywordToolService
   class SiteKeyword < Hash;end
 end;end;end
 
@@ -26,7 +26,7 @@ module AuthorityLabs
         nil
       end
     end
-    
+
     # This here is a hack to remove the nested root node from the request. Sets
     # the root node to nil and removes the <> and </>
     def encode(options={})
@@ -36,6 +36,8 @@ module AuthorityLabs
   end
 
   class Keyword < Resource
+    class LimitReached < ActiveResource::ResourceInvalid; end;
+
     self.element_name = "watched_keyword"
 
     # The keywords can return multiple records on a single find, which will
@@ -59,24 +61,44 @@ module AuthorityLabs
       end
       super(attributes)
     end
-    
+
     def self.find_with_domain(id, domain_id)
       self.find(id, :params => {:watched_domain_id => domain_id})
+    end
+
+    # Create (i.e., \save to the remote service) the \new resource.
+    def self.create(*arguments)
+      s = super(*arguments)
+      if s.error && s.error.include?("limit")
+        raise LimitReached.new("Keyword Limit Reached")
+      end
+      s
     end
   end
 
   class Domain < Resource
+    class LimitReached < ActiveResource::ResourceInvalid; end;
+
     self.element_name = "watched_domain"
+
+    # Create (i.e., \save to the remote service) the \new resource.
+    def self.create(*arguments)
+      s = super(*arguments)
+      if s.errors[:domain_name] == "is not allowed"
+        raise LimitReached.new("Domain Limit Reached")
+      end
+      s
+    end
 
     # Array of all keywords for domain
     def keywords
-      @keywords ||= keyword_class.find(:all, :params => { 
+      @keywords ||= keyword_class.find(:all, :params => {
         :watched_domain_id => self.id })
     end
 
     # Add a keyword
     def create_keyword(keywords = "")
-      keyword_class.create(:keyword_name => keywords, 
+      keyword_class.create(:keyword_name => keywords,
                            :watched_domain_id => self.id)
     end
 
@@ -108,7 +130,7 @@ module AuthorityLabs
 
     # Get the url used by the objects
     def site
-      if [@api_key, @password, @subdomain].any? do |v| 
+      if [@api_key, @password, @subdomain].any? do |v|
         v.nil? || !defined?(v)
       end
         raise AuthorityLabs::ArgumentError.new(
