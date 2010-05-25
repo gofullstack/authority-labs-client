@@ -1,5 +1,6 @@
 require 'rubygems' unless ENV['NO_RUBYGEMS']
 %w[rake rake/clean fileutils newgem rubigen].each { |f| require f }
+require 'hoe'
 require File.dirname(__FILE__) + '/lib/authority-labs-client'
 
 # Generate all the Rake tasks
