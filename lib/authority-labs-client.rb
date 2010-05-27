@@ -69,7 +69,7 @@ module AuthorityLabs
     # Create (i.e., \save to the remote service) the \new resource.
     def self.create(*arguments)
       s = super(*arguments)
-      if s.error && s.error.include?("limit")
+      if s.respond_to?(:error) && s.error.include?("limit")
         raise LimitReached.new("Keyword Limit Reached")
       end
       s
@@ -84,7 +84,7 @@ module AuthorityLabs
     # Create (i.e., \save to the remote service) the \new resource.
     def self.create(*arguments)
       s = super(*arguments)
-      if s.errors[:domain_name] == "is not allowed"
+      if s.respond_to?(:errors) && s.errors[:domain_name] == "is not allowed"
         raise LimitReached.new("Domain Limit Reached")
       end
       s
