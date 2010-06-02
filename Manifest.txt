@@ -1,7 +1,0 @@
-History.txt
-Manifest.txt
-README.rdoc
-Rakefile
-lib/authority-labs-client.rb
-test/test_authority-labs-client.rb
-test/test_helper.rb

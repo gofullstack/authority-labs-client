@@ -1,27 +1,26 @@
-require 'rubygems' unless ENV['NO_RUBYGEMS']
-%w[rake rake/clean fileutils newgem rubigen].each { |f| require f }
-require 'hoe'
-require File.dirname(__FILE__) + '/lib/authority-labs-client'
+require 'rubygems'
+require 'fileutils'
 
-# Generate all the Rake tasks
-# Run 'rake -T' to see list of generated tasks (from gem root directory)
-$hoe = Hoe.new('authority-labs-client', AuthorityLabs::VERSION) do |p|
-  p.developer('Cramer Development, Inc.', 'support@cramerdev.com')
-  p.changes              = p.paragraphs_of("History.txt", 0..1).join("\n\n")
-  p.rubyforge_name       = p.name
-  p.extra_deps         = [
-    ['activesupport', '>= 2.3.2'],
-    ['activeresource', '>= 2.3.2']
-  ]
-  p.extra_dev_deps = [
-    ['newgem', ">= #{::Newgem::VERSION}"]
-  ]
-  
-  p.clean_globs |= %w[**/.DS_Store tmp *.log]
-  path = (p.rubyforge_name == p.name) ? p.rubyforge_name : "\#{p.rubyforge_name}/\#{p.name}"
-  p.remote_rdoc_dir = File.join(path.gsub(/^#{p.rubyforge_name}\/?/,''), 'rdoc')
-  p.rsync_args = '-av --delete --ignore-errors'
+begin
+  require 'jeweler'
+rescue LoadError
+  puts "Jeweler not available. Install it with gem install jeweler"
 end
 
-require 'newgem/tasks' # load /tasks/*.rake
-Dir['tasks/**/*.rake'].each { |t| load t }
+Jeweler::Tasks.new do |gemspec|
+  gemspec.name = "authority-labs-client"
+  gemspec.description = "A Ruby client for the Authority Labs (http://authoritylabs.com/) API."
+  gemspec.summary = "Get domain and keyword data from Authority Labs."
+  gemspec.email = "support@cramerdev.com"
+  gemspec.homepage = "http://cramerdev.com/"
+  gemspec.authors = ["Cramer Development"]
+  gemspec.add_dependency('active_support', '>= 2.0.2')
+  gemspec.add_dependency('active_resource', '>= 2.0.2')
+  gemspec.version = "0.0.1"
+end
+
+require 'rake/testtask'
+Rake::TestTask.new
+
+task :default => :test
+

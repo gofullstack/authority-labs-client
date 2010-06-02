@@ -6,19 +6,16 @@ A Ruby client for the Authority Labs (http://authoritylabs.com/) API.
 
 == FEATURES/PROBLEMS:
 
-
-
 == SYNOPSIS:
-
-
 
 == REQUIREMENTS:
 
-* The rest-client gem
+* ActiveSupport
+* ActiveResource
 
 == INSTALL:
 
-* sudo gem install authoriy-labs-client
+* gem install authoriy-labs-client
 
 == LICENSE:
 
